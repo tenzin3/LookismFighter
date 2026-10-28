@@ -188,13 +188,16 @@ namespace LookismFighter
             Vector3 p = transform.position;
             p.x = Mathf.Clamp(p.x + vx * dt, -stageHalfWidth, stageHalfWidth);
             p.y = 0f; p.z = 0f;
-            // keep fighters from overlapping: push apart smoothly
-            if (opponent && state != FState.Down && state != FState.KO && opponent.State != FState.Down && opponent.State != FState.KO)
+            // Solid bodies: a fighter can never pass through or cross over to the other side of his opponent.
+            if (opponent)
             {
-                float d = p.x - opponent.X;
-                float overlap = FightConfig.PersonalSpace - Mathf.Abs(d);
-                if (overlap > 0f) p.x += Mathf.Sign(d == 0 ? -facing : d) * overlap * Mathf.Min(1f, 12f * dt) * 0.5f;
+                float space = (state == FState.Down || state == FState.KO || opponent.State == FState.Down || opponent.State == FState.KO)
+                    ? FightConfig.PersonalSpace * 0.6f   // lying on the floor takes less room
+                    : FightConfig.PersonalSpace;
+                p.x = facing > 0 ? Mathf.Min(p.x, opponent.X - space) : Mathf.Max(p.x, opponent.X + space);
                 p.x = Mathf.Clamp(p.x, -stageHalfWidth, stageHalfWidth);
+                if ((facing > 0 && vx > 0f) || (facing < 0 && vx < 0f))
+                    if (Mathf.Abs(p.x - opponent.X) <= space + 0.001f) vx = 0f; // bumped into him: stop instead of pushing
             }
             transform.position = p;
 
