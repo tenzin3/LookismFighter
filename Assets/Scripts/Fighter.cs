@@ -19,11 +19,9 @@ namespace LookismFighter
 
         [Header("Stats")]
         public int maxHealth = 120;
-        public float walkForwardSpeed = 1.5f;
-        public float walkBackSpeed = 1.2f;
         public float jumpDrift = 1.6f;
-        public float minDistance = 0.65f;
         public float stageHalfWidth = 7f;
+        // walking speed, spacing, turning and blending are in FightConfig (MoveTable.cs)
 
         [Header("Filled in by the setup tool")]
         public string[] stateNames = new string[0];
@@ -50,7 +48,7 @@ namespace LookismFighter
         readonly List<(string button, float time)> buffer = new List<(string, float)>();
         MoveData move;
         bool moveConnected;
-        float t, stun, downTimer, vx;
+        float t, stun, downTimer, vx, targetVx;
         int facing = 1;
         bool backHeld, crouchBlockStun;
         string playing;
@@ -70,7 +68,7 @@ namespace LookismFighter
         float Dur(string s) => Dur(s, MoveTable.SpeedOf(s));
         float DistanceToOpponent => opponent ? Mathf.Abs(opponent.X - X) : 99f;
 
-        void Play(string s, bool restart = false, float fade = 0.08f)
+        void Play(string s, bool restart = false, float fade = FightConfig.MoveBlend)
         {
             if (!restart && playing == s) return;
             playing = s;
@@ -88,7 +86,7 @@ namespace LookismFighter
 
         public void ResetForRound(float x)
         {
-            Health = maxHealth; vx = 0; t = 0; stun = 0; move = null; Combo = 0; buffer.Clear();
+            Health = maxHealth; vx = 0; targetVx = 0; t = 0; stun = 0; move = null; Combo = 0; buffer.Clear();
             transform.position = new Vector3(x, 0, 0);
             facing = opponent && opponent.transform.position.x < x ? -1 : 1;
             ApplyFacing();
@@ -97,7 +95,16 @@ namespace LookismFighter
 
         public void Celebrate() { state = FState.Victory; vx = 0; Play("victory", true); }
 
-        void ApplyFacing() => transform.rotation = Quaternion.Euler(0f, facing > 0 ? 90f : -90f, 0f);
+        Quaternion FacingRotation => Quaternion.Euler(0f, facing > 0 ? 90f + FightConfig.BodyTurnToCamera : -90f - FightConfig.BodyTurnToCamera, 0f);
+        void ApplyFacing() { transform.rotation = FacingRotation; ApplyMirror(); }
+
+        // Mirroring the left-facing fighter makes both fighters show their chest to the camera.
+        void ApplyMirror()
+        {
+            Vector3 sc = transform.localScale;
+            float want = FightConfig.MirrorWhenFacingLeft && facing < 0 ? -Mathf.Abs(sc.x) : Mathf.Abs(sc.x);
+            if (sc.x != want) { sc.x = want; transform.localScale = sc; }
+        }
 
         // ------------------------------------------------------------------ main loop
         void Update()
@@ -154,6 +161,7 @@ namespace LookismFighter
                     break;
 
                 case FState.Down:
+                    if (t - dt < 0.55f && t >= 0.55f && AudioManager.Instance) AudioManager.Instance.Fall();
                     vx = Mathf.MoveTowards(vx, 0f, 6f * dt);
                     downTimer -= dt;
                     if (downTimer <= 0f) { SetState(FState.GetUp, "getting_up", true); vx = 0; }
@@ -168,36 +176,47 @@ namespace LookismFighter
                     break;
 
                 case FState.KO: case FState.Victory:
+                    if (state == FState.KO && t - dt < 0.55f && t >= 0.55f && AudioManager.Instance) AudioManager.Instance.Fall();
                     vx = Mathf.MoveTowards(vx, 0f, 6f * dt);
                     break;
             }
+
+            // walking eases in and out instead of snapping
+            if (IsActionable) vx = Mathf.MoveTowards(vx, targetVx, FightConfig.Acceleration * dt);
 
             // movement on the X axis only (2.5D)
             Vector3 p = transform.position;
             p.x = Mathf.Clamp(p.x + vx * dt, -stageHalfWidth, stageHalfWidth);
             p.y = 0f; p.z = 0f;
-            // keep fighters from walking through each other
+            // keep fighters from overlapping: push apart smoothly
             if (opponent && state != FState.Down && state != FState.KO && opponent.State != FState.Down && opponent.State != FState.KO)
             {
                 float d = p.x - opponent.X;
-                if (Mathf.Abs(d) < minDistance) p.x = Mathf.Clamp(opponent.X + Mathf.Sign(d == 0 ? -facing : d) * minDistance, -stageHalfWidth, stageHalfWidth);
+                float overlap = FightConfig.PersonalSpace - Mathf.Abs(d);
+                if (overlap > 0f) p.x += Mathf.Sign(d == 0 ? -facing : d) * overlap * Mathf.Min(1f, 12f * dt) * 0.5f;
+                p.x = Mathf.Clamp(p.x, -stageHalfWidth, stageHalfWidth);
             }
             transform.position = p;
+
+            // turn smoothly to face the opponent
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, FacingRotation, FightConfig.TurnSpeed * dt);
+            ApplyMirror();
         }
 
         void Neutral(FighterInput inp, bool fwd, bool back)
         {
-            if (opponent) { facing = opponent.X >= X ? 1 : -1; ApplyFacing(); }
+            if (opponent) facing = opponent.X >= X ? 1 : -1;
             if (TryAttack(inp.Down, fwd)) return;
-            if (inp.Taunt) { SetState(FState.Taunt, "taunt", true); vx = 0; return; }
-            if (inp.Up) { SetState(FState.Jump, "jump", true); vx = (fwd ? jumpDrift : back ? -jumpDrift : 0f) * facing; return; }
+            if (inp.Taunt) { SetState(FState.Taunt, "taunt", true); vx = targetVx = 0; return; }
+            if (inp.Up) { SetState(FState.Jump, "jump", true); vx = targetVx = (fwd ? jumpDrift : back ? -jumpDrift : 0f) * facing; return; }
 
-            bool threat = opponent && (opponent.State == FState.Attack || opponent.State == FState.Jump) && DistanceToOpponent < 2.6f;
-            if (inp.Down) { vx = 0; if (back && threat) SetState(FState.CrouchBlock, "block_low"); else SetState(FState.Crouch, "crouch_idle"); }
-            else if (back && threat) { vx = 0; SetState(FState.Block, "block_high"); }
-            else if (fwd) { vx = walkForwardSpeed * facing; SetState(FState.WalkForward, "step_forward"); }
-            else if (back) { vx = -walkBackSpeed * facing; SetState(FState.WalkBack, "step_backward"); }
-            else { vx = 0; SetState(FState.Idle, "fighting_idle"); }
+            bool threat = opponent && (opponent.State == FState.Attack || opponent.State == FState.Jump) && DistanceToOpponent < 2.9f;
+            bool blocked = DistanceToOpponent <= FightConfig.PersonalSpace + 0.02f;
+            if (inp.Down) { targetVx = 0; if (back && threat) SetState(FState.CrouchBlock, "block_low"); else SetState(FState.Crouch, "crouch_idle"); }
+            else if (back && threat) { targetVx = 0; SetState(FState.Block, "block_high"); }
+            else if (fwd) { targetVx = blocked ? 0f : FightConfig.WalkForward * facing; SetState(FState.WalkForward, "step_forward"); }
+            else if (back) { targetVx = -FightConfig.WalkBack * facing; SetState(FState.WalkBack, "step_backward"); }
+            else { targetVx = 0; SetState(FState.Idle, "fighting_idle"); }
         }
 
         bool TryAttack(bool down, bool fwd)
@@ -219,9 +238,10 @@ namespace LookismFighter
         void StartMove(string name)
         {
             if (!MoveTable.Moves.TryGetValue(name, out var m)) return;
-            move = m; moveConnected = false; buffer.Clear(); vx = 0;
+            move = m; moveConnected = false; buffer.Clear(); vx *= 0.3f; targetVx = 0f;
             state = FState.Attack; t = 0f;
-            Play(m.State, true, 0.05f);
+            Play(m.State, true, FightConfig.AttackBlend);
+            if (AudioManager.Instance) AudioManager.Instance.Swing(m.Heavy);
         }
 
         // ------------------------------------------------------------------ getting hit

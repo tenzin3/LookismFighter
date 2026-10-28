@@ -20,7 +20,7 @@ namespace LookismFighter
         [Range(0, 2)] public int cpuLevel = 1;
         public int roundTime = 60;
         public int roundsToWin = 2;
-        public float startDistance = 3f;
+        public float startDistance = 3.2f;
 
         int round = 1, wins1, wins2;
         float timer, freezeUntil, announceUntil, counterUntil1, counterUntil2;
@@ -29,7 +29,11 @@ namespace LookismFighter
         Coroutine flow;
         static readonly string[] Levels = { "EASY", "NORMAL", "HARD" };
 
-        void Awake() { Instance = this; }
+        void Awake()
+        {
+            Instance = this;
+            if (!GetComponent<AudioManager>()) gameObject.AddComponent<AudioManager>();
+        }
 
         void Start()
         {
@@ -73,6 +77,7 @@ namespace LookismFighter
                 timer = roundTime;
                 bool finalRound = wins1 == roundsToWin - 1 && wins2 == roundsToWin - 1;
                 Announce(finalRound ? "FINAL ROUND" : "ROUND " + round, "", 1.3f);
+                if (AudioManager.Instance) AudioManager.Instance.RoundBell();
                 yield return new WaitForSecondsRealtime(1.4f);
                 Announce("FIGHT!", "", 0.7f);
                 player1.controlsEnabled = player2.controlsEnabled = true;
@@ -99,6 +104,7 @@ namespace LookismFighter
                 {
                     bool perfect = winner != null && winner.Health == winner.maxHealth;
                     Announce(perfect ? "PERFECT" : "K.O.", "", 2.2f);
+                    if (AudioManager.Instance) AudioManager.Instance.KO();
                     Time.timeScale = 0.3f;
                     yield return new WaitForSecondsRealtime(1.3f);
                     Time.timeScale = 1f;
@@ -128,6 +134,7 @@ namespace LookismFighter
         public void OnHit(Fighter attacker, Fighter defender, int damage, bool counter, bool heavy)
         {
             freezeUntil = Time.unscaledTime + (heavy ? 0.13f : 0.07f);
+            if (AudioManager.Instance) AudioManager.Instance.Hit(heavy);
             Spark(Between(attacker, defender, heavy ? 1.2f : 1.4f), counter ? new Color(1f, 0.45f, 0.2f) : Color.white, heavy ? 0.7f : 0.45f);
             if (FightCamera.Instance) FightCamera.Instance.Shake(heavy ? 0.12f : 0.05f);
             if (counter) { if (attacker == player1) counterUntil1 = Time.unscaledTime + 0.8f; else counterUntil2 = Time.unscaledTime + 0.8f; }
@@ -136,6 +143,7 @@ namespace LookismFighter
         public void OnBlock(Fighter attacker, Fighter defender)
         {
             freezeUntil = Time.unscaledTime + 0.05f;
+            if (AudioManager.Instance) AudioManager.Instance.Blocked();
             Spark(Between(attacker, defender, 1.3f), new Color(0.5f, 0.8f, 1f), 0.35f);
         }
 

@@ -8,17 +8,17 @@ namespace LookismFighter
         public static FightCamera Instance { get; private set; }
 
         public Fighter fighterA, fighterB;
-        public float height = 1.45f;
-        public float lookHeight = 1.05f;
-        public float minDistance = 4.2f;
-        public float maxDistance = 9f;
-        public float distancePerMeter = 0.85f;
-        public float smoothing = 5f;
         public float stageHalfWidth = 7f;
+        // camera height, distance, zoom and field of view are set in FightConfig (MoveTable.cs)
 
-        float shakeTime, shakeAmount, x, dist = 5f;
+        float shakeTime, shakeAmount, x, dist = 6f;
 
-        void Awake() { Instance = this; }
+        void Awake()
+        {
+            Instance = this;
+            var cam = GetComponent<Camera>();
+            if (cam) cam.fieldOfView = FightConfig.CamFieldOfView;
+        }
 
         public void Shake(float amount) { shakeTime = 0.25f; shakeAmount = Mathf.Max(shakeAmount, amount); }
 
@@ -28,8 +28,8 @@ namespace LookismFighter
             float dt = Time.unscaledDeltaTime;
             float mid = (fighterA.X + fighterB.X) * 0.5f;
             float sep = Mathf.Abs(fighterA.X - fighterB.X);
-            float targetDist = Mathf.Clamp(3.2f + sep * distancePerMeter, minDistance, maxDistance);
-            float k = 1f - Mathf.Exp(-smoothing * dt);
+            float targetDist = Mathf.Clamp(FightConfig.CamBaseDistance + sep * FightConfig.CamDistancePerMeter, FightConfig.CamMinDistance, FightConfig.CamMaxDistance);
+            float k = 1f - Mathf.Exp(-FightConfig.CamSmoothing * dt);
             x = Mathf.Lerp(x, Mathf.Clamp(mid, -stageHalfWidth + 2f, stageHalfWidth - 2f), k);
             dist = Mathf.Lerp(dist, targetDist, k);
 
@@ -41,8 +41,8 @@ namespace LookismFighter
             }
             else shakeAmount = 0f;
 
-            transform.position = new Vector3(x, height, -dist) + shake;
-            transform.LookAt(new Vector3(x, lookHeight, 0f) + shake * 0.5f);
+            transform.position = new Vector3(x, FightConfig.CamHeight, -dist) + shake;
+            transform.LookAt(new Vector3(x, FightConfig.CamLookHeight, 0f) + shake * 0.5f);
         }
     }
 }

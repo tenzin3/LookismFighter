@@ -67,13 +67,13 @@ namespace LookismFighter
                 float r = Random.value;
                 bool punish = o.State == FState.GetUp || (o.State == FState.Attack && o.CurrentMoveDuration > 0 && o.AttackTime > o.CurrentMoveDuration * 0.65f);
 
-                if (punish && dist < 1.3f && Random.value < blockChance + 0.2f)
+                if (punish && dist < 1.65f && Random.value < blockChance + 0.2f)
                 {
                     if (Random.value < 0.5f) { i.Down = true; if (fwdIsRight) i.Right = true; else i.Left = true; i.B2 = true; } // uppercut
                     else { i.B1 = true; chainButton = "2"; chainAt = 0.25f; }
                 }
-                else if (dist > 2.4f) { holdFwd = true; holdTime = Random.Range(0.3f, 0.7f); }
-                else if (dist > 1.45f)
+                else if (dist > 2.75f) { holdFwd = true; holdTime = Random.Range(0.3f, 0.7f); }
+                else if (dist > 1.8f)
                 {
                     if (r < 0.7f) { holdFwd = true; holdTime = Random.Range(0.15f, 0.4f); }
                     else if (r < 0.85f) { holdBack = true; holdTime = 0.3f; }
