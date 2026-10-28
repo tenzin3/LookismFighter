@@ -25,7 +25,7 @@ namespace LookismFighter
         int round = 1, wins1, wins2;
         float timer, freezeUntil, announceUntil, counterUntil1, counterUntil2;
         string announce = "", subAnnounce = "";
-        bool fighting, matchOver, paused, showHelp = true;
+        bool matchOver, paused, showHelp = true;
         Coroutine flow;
         static readonly string[] Levels = { "EASY", "NORMAL", "HARD" };
 
@@ -81,7 +81,6 @@ namespace LookismFighter
                 yield return new WaitForSecondsRealtime(1.4f);
                 Announce("FIGHT!", "", 0.7f);
                 player1.controlsEnabled = player2.controlsEnabled = true;
-                fighting = true;
 
                 // fight until KO or time-out
                 while (true)
@@ -91,7 +90,6 @@ namespace LookismFighter
                     if (mode == Mode.Training && player2.Health < player2.maxHealth * 0.25f) player2.ResetForRound(player2.X);
                     yield return null;
                 }
-                fighting = false;
                 timer = Mathf.Max(0f, timer);
 
                 Fighter winner = null;
