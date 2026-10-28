@@ -4,7 +4,9 @@ A 2.5D Tekken-style fighting game prototype with a manga look, built in **Unity 
 
 Fighters are full 3D characters, but they move on a single 2D plane and always face each other, like Tekken or Street Fighter 6.
 
-![Gameplay on the rooftop sunset stage](Docs/screenshot.png)
+**[▶ Play in your browser](https://tenzin3.github.io/LookismFighter/)** (desktop: keyboard or gamepad · phone: touch controls, hold it sideways)
+
+![Gameplay on the rooftop sunset stage](docs/screenshot.png)
 
 ## Made with AI tools
 
@@ -80,6 +82,12 @@ All fight tuning (game speed, damage, reach, camera) is in `FightConfig` and `Mo
 2. Generate the model in Triverse (HD Mesh, 50K, texture on) and export it as FBXZ.
 3. Upload it to Mixamo, auto-rig it, and download it in T-pose.
 4. Import it into `Assets/Characters` and set it to Humanoid. The existing animations can be reused through Unity's Humanoid retargeting.
+
+## Web build (GitHub Pages)
+
+The playable web version lives in `docs/` and is published by GitHub Pages (Settings → Pages → Deploy from branch `main`, folder `/docs`).
+
+To update it: **File → Build Profiles → Web → Build**, choose the `docs` folder (lowercase), then commit and push. Publishing settings: Compression Format **Gzip**, **Decompression Fallback on**. `docs/.nojekyll` stops GitHub from processing the files, and `.gitattributes` keeps `docs/` out of Git LFS because Pages cannot serve LFS files.
 
 ## Repository notes
 
