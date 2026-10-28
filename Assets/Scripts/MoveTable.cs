@@ -43,12 +43,14 @@ namespace LookismFighter
         // camera
         public const float CamHeight = 1.75f;
         public const float CamLookHeight = 1.05f;
-        public const float CamMinDistance = 5.2f;
-        public const float CamMaxDistance = 10f;
-        public const float CamBaseDistance = 3.4f;
-        public const float CamDistancePerMeter = 0.9f;
         public const float CamFieldOfView = 32f;
-        public const float CamSmoothing = 6f;
+        public const float CamMinDistance = 5.2f;     // closest the camera gets
+        public const float CamMaxDistance = 14f;      // furthest it pulls back
+        public const float CamEdgeMargin = 1.3f;      // space kept between a fighter and the screen edge (m)
+        public const float CamPanDeadZone = 1.5f;     // fighters can drift this far before the camera pans (m)
+        public const float CamPanTime = 0.6f;         // seconds to catch up when panning (higher = calmer)
+        public const float CamZoomOutTime = 0.18f;    // pull back quickly so nobody leaves the screen
+        public const float CamZoomInTime = 0.6f;      // move back in gently
     }
 
     /// <summary>
