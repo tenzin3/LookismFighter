@@ -55,6 +55,14 @@ namespace LookismFighter
                 }
             }
 
+            // On-screen touch controls drive Player 1
+            var tc = TouchControls.Instance;
+            if (tc != null && tc.Visible && layout != Layout.Player2)
+            {
+                i.Left |= tc.Left; i.Right |= tc.Right; i.Up |= tc.Up; i.Down |= tc.Down;
+                i.B1 |= tc.B1; i.B2 |= tc.B2; i.B3 |= tc.B3; i.B4 |= tc.B4;
+            }
+
             // Gamepad: square/X = 1, triangle/Y = 2, cross/A = 3, circle/B = 4
             if (padIndex >= 0 && padIndex < Gamepad.all.Count)
             {

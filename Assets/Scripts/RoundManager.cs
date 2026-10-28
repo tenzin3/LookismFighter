@@ -33,6 +33,8 @@ namespace LookismFighter
         {
             Instance = this;
             if (!GetComponent<AudioManager>()) gameObject.AddComponent<AudioManager>();
+            if (!GetComponent<TouchControls>()) gameObject.AddComponent<TouchControls>();
+            if (Application.isMobilePlatform) Application.targetFrameRate = 60;
         }
 
         void Start()
@@ -119,7 +121,7 @@ namespace LookismFighter
                 {
                     matchOver = true;
                     string who = mode == Mode.VsCpu ? (wins1 >= roundsToWin ? "YOU WIN" : "YOU LOSE") : (wins1 >= roundsToWin ? "1P WINS" : "2P WINS");
-                    Announce(who, "Press ENTER for a rematch", 9999f);
+                    Announce(who, TouchControls.Instance != null && TouchControls.Instance.Visible ? "Tap for a rematch" : "Press ENTER for a rematch", 9999f);
                     yield break;
                 }
                 round++;
@@ -178,12 +180,23 @@ namespace LookismFighter
             Destroy(go);
         }
 
+        void TogglePause() { paused = !paused; Time.timeScale = paused ? 0f : 1f; }
+
         // ------------------------------------------------------------------ menu keys
         void Update()
         {
+            // touch: pause button, tap to rematch
+            var touch = TouchControls.Instance;
+            if (touch != null)
+            {
+                if (touch.PausePressed) TogglePause();
+                else if (matchOver && touch.TappedAnywhere) StartMatch(mode);
+                else if (paused && touch.TappedAnywhere) TogglePause();
+            }
+
             var k = Keyboard.current;
             if (k == null) return;
-            if (k.escapeKey.wasPressedThisFrame) { paused = !paused; Time.timeScale = paused ? 0f : 1f; }
+            if (k.escapeKey.wasPressedThisFrame) TogglePause();
             if (k.hKey.wasPressedThisFrame) showHelp = !showHelp;
             if (k.f1Key.wasPressedThisFrame) StartMatch(Mode.VsCpu);
             if (k.f2Key.wasPressedThisFrame) StartMatch(Mode.TwoPlayers);
@@ -270,7 +283,7 @@ namespace LookismFighter
             }
             if (paused) Shadowed(new Rect(0, Screen.height * 0.4f, W, 160 * s), "PAUSED", big, Color.white);
 
-            if (showHelp)
+            if (showHelp && !(TouchControls.Instance != null && TouchControls.Instance.Visible))
             {
                 string controls = mode == Mode.TwoPlayers
                     ? "1P: WASD move · F G punch · C V kick      2P: arrows move · K L (Num4 Num5) punch · , . (Num1 Num2) kick"
