@@ -4,13 +4,25 @@ A 2.5D Tekken-style fighting game prototype with a manga look, built in **Unity 
 
 Fighters are full 3D characters, but they move on a single 2D plane and always face each other, like Tekken or Street Fighter 6.
 
+![Gameplay on the rooftop sunset stage](Docs/screenshot.png)
+
+## Made with AI tools
+
+| Part | Tool |
+|---|---|
+| Character concept art (the front-view illustration) and the rooftop sunset background | [ChatGPT](https://chatgpt.com) image generation |
+| 3D model from the character image | [Triverse](https://triverse.ai) |
+| Skeleton (rigging) and all animations | [Mixamo](https://www.mixamo.com) |
+| All game code: fighting system, controls, CPU opponent, camera, rounds and HUD, generated sound effects and music, and the one-click editor setup tools | [Claude](https://claude.ai) (Anthropic) |
+| Engine | [Unity 6](https://unity.com) |
+
 ## How the character was made
 
 The fighter (`Assets/Characters/gun.fbx`) was made in three steps, without hand-modelling or hand-animating.
 
 ### 1. 3D model from a single image — [Triverse](https://triverse.ai)
 
-- We started from one **front-view character illustration**: full body, A-pose with arms away from the body, plain white background.
+- We started from one **front-view character illustration**, generated with **ChatGPT**: full body, A-pose with arms away from the body, plain white background.
 - Triverse's **HD Mesh → Image** tool turned that image into a textured 3D model.
 - Settings used: **Polycount 50K**, **Open texture ON**, Multi View off, Ultra Mesh Quality off.
 - Exported as **FBXZ** (an FBX plus a `texture/` folder with `albedo.jpg`, `roughness.jpg` and `metallic.jpg`).
@@ -40,6 +52,28 @@ Mixamo is responsible for **joining the model to a skeleton** and for **all of t
 - Root motion **baked into pose** (rotation, Y and XZ) on all clips, so movement is driven by game code rather than by the animations.
 - `Assets/Animations/FighterAnimator.controller` has `fighting_idle` as its default state and is assigned to the character in `SampleScene`.
 
+## The stage
+
+- The rooftop sunset background (`Assets/Stage/rooftop_sunset.png`) was generated with **ChatGPT**.
+- **Tools → Lookism Fighter → Apply Rooftop Sunset Stage** places it as a large backdrop behind the fight, builds a wet-concrete 3D floor that meets the painted railing, adds a reflection probe so the floor mirrors the city, and sets warm sunset lighting.
+
+## Playing
+
+Run **Tools → Lookism Fighter → Setup Fight Scene** once, then press Play.
+
+| Action | Keys |
+|---|---|
+| Move · jump · crouch | W A S D |
+| Punch 1 / 2 | U / I |
+| Kick 3 / 4 | J / K |
+| Block high/mid · block low | hold back · hold down + back |
+| Hook · uppercut | forward + U · down + forward + I |
+| Low kick · leg sweep | down + J · down + K |
+| VS CPU · 2 players · training | F1 · F2 · F3 |
+| CPU difficulty · pause · help | F5 · Esc · H |
+
+All fight tuning (game speed, damage, reach, camera) is in `FightConfig` and `MoveTable` in `Assets/Scripts/MoveTable.cs`.
+
 ## Adding another fighter
 
 1. Make a front-view, A-pose, white-background image of the new character.
@@ -54,8 +88,10 @@ Mixamo is responsible for **joining the model to a skeleton** and for **all of t
 
 ## Credits
 
+- Character concept art and background: [ChatGPT](https://chatgpt.com)
 - 3D model generation: [Triverse](https://triverse.ai)
 - Rigging and animations: [Mixamo](https://www.mixamo.com) (Adobe)
+- Game code: [Claude](https://claude.ai) (Anthropic)
 - Engine: [Unity](https://unity.com)
 
-Check Triverse's and Mixamo's current terms of use before publishing or selling the game.
+Check the current terms of use of ChatGPT, Triverse and Mixamo before publishing or selling the game.
