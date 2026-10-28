@@ -45,12 +45,12 @@ namespace LookismFighter.EditorTools
             EditorUtility.SetDirty(ctrl);
 
             // ---------------------------------------------------------------- 2. Player 1 and Player 2
-            var fighters = Object.FindObjectsByType<Fighter>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var fighters = FindInOpenScene<Fighter>();
             GameObject p1 = fighters.FirstOrDefault(f => f.playerIndex == 0)?.gameObject;
             GameObject p2 = fighters.FirstOrDefault(f => f.playerIndex == 1)?.gameObject;
             if (p1 == null)
             {
-                var anims = Object.FindObjectsByType<Animator>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                var anims = FindInOpenScene<Animator>();
                 var a = anims.FirstOrDefault(x => x.runtimeAnimatorController == ctrl) ?? anims.FirstOrDefault(x => x.gameObject.name.ToLower().Contains("gun"));
                 if (a == null) { EditorUtility.DisplayDialog("Lookism Fighter", "Drag Assets/Characters/gun.fbx into the scene first, then run this again.", "OK"); return; }
                 p1 = a.gameObject;
@@ -103,7 +103,7 @@ namespace LookismFighter.EditorTools
                 cam.fieldOfView = 35f;
                 EditorUtility.SetDirty(fc);
             }
-            var rm = Object.FindFirstObjectByType<RoundManager>();
+            var rm = FindInOpenScene<RoundManager>().FirstOrDefault();
             if (rm == null) rm = new GameObject("RoundManager").AddComponent<RoundManager>();
             rm.player1 = f1; rm.player2 = f2;
             EditorUtility.SetDirty(rm);
@@ -115,6 +115,13 @@ namespace LookismFighter.EditorTools
             string msg = "Fight scene is ready. Press Play!\n\nWASD move · U I punch · J K kick · hold back to block.\nF1 VS CPU · F2 2 Players · F3 Training · H help";
             if (missing.Count > 0) msg += "\n\nMissing animations (not found in Assets/Animations): " + string.Join(", ", missing);
             EditorUtility.DisplayDialog("Lookism Fighter", msg, "OK");
+        }
+
+        // Finds components (including inactive ones) in the open scene without the deprecated Find* APIs.
+        static T[] FindInOpenScene<T>() where T : Component
+        {
+            var scene = EditorSceneManager.GetActiveScene();
+            return scene.GetRootGameObjects().SelectMany(go => go.GetComponentsInChildren<T>(true)).ToArray();
         }
 
         static T GetOrAdd<T>(GameObject go) where T : Component
