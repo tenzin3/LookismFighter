@@ -30,7 +30,7 @@ namespace LookismFighter
             var i = new FighterInput();
             var o = me.opponent;
             if (o == null) return i;
-            float dt = Time.deltaTime;
+            float dt = Time.deltaTime * FightConfig.GameSpeed;
             float dist = Mathf.Abs(o.X - me.X);
             bool fwdIsRight = me.Facing > 0;
 

@@ -30,15 +30,16 @@ namespace LookismFighter
     public static class FightConfig
     {
         // fighters
+        public const float GameSpeed = 1.35f;        // speed of the whole fight: animations, attacks, stun, walking (1 = normal)
         public const float PersonalSpace = 1.0f;     // closest the two fighters can stand (m)
-        public const float WalkForward = 1.7f;       // m/s
-        public const float WalkBack = 1.4f;          // m/s
-        public const float Acceleration = 14f;       // how fast walking starts/stops (m/s²) - higher = snappier
+        public const float WalkForward = 1.9f;       // m/s
+        public const float WalkBack = 1.6f;          // m/s
+        public const float Acceleration = 22f;       // how fast walking starts/stops (m/s²) - higher = snappier
         public const float TurnSpeed = 900f;         // degrees per second when turning to face the opponent
         public const float BodyTurnToCamera = 22f;   // degrees the fighters angle their chest toward the camera
         public const bool MirrorWhenFacingLeft = true; // mirror the fighter on the right side so both show their chest (like Tekken)
-        public const float MoveBlend = 0.15f;        // seconds to blend between idle/walk/crouch animations
-        public const float AttackBlend = 0.04f;      // seconds to blend into attacks (keep small = responsive)
+        public const float MoveBlend = 0.1f;         // seconds to blend between idle/walk/crouch animations
+        public const float AttackBlend = 0.03f;      // seconds to blend into attacks (keep small = responsive)
 
         // camera
         public const float CamHeight = 1.75f;

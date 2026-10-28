@@ -119,9 +119,9 @@ namespace LookismFighter
             buffer.RemoveAll(p => now - p.time > BufferWindow);
 
             if (RoundManager.Frozen) { anim.speed = 0f; return; }
-            anim.speed = 1f;
+            anim.speed = FightConfig.GameSpeed;
 
-            float dt = Time.deltaTime;
+            float dt = Time.deltaTime * FightConfig.GameSpeed; // everything runs at game speed
             t += dt;
             bool fwd = facing > 0 ? inp.Right : inp.Left;
             bool back = facing > 0 ? inp.Left : inp.Right;
